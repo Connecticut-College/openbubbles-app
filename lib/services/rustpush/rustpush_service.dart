@@ -14,6 +14,7 @@ import 'package:bluebubbles/utils/crypto_utils.dart';
 import 'package:bluebubbles/utils/logger.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:get/get.dart';
@@ -234,8 +235,14 @@ class RustPushBBUtils {
     "Mac14,8": "Mac Pro (2023)",
   };
 
-  static bool isLaptop(String model) {
-    return model.contains("MacBook");
+  static IconData getIcon(String model) {
+    if (model.contains("MacBook")) {
+      return CupertinoIcons.device_laptop;
+    } else if (model.contains("iPhone")) {
+      return CupertinoIcons.device_phone_portrait;
+    } else {
+      return CupertinoIcons.device_desktop;
+    }
   }
 
   static String modelToUser(String model) {
@@ -292,6 +299,7 @@ class RustPushBackend implements BackendService {
   void markFailedToLogin() async {
     print("markingfailed");
     ss.settings.finishedSetup.value = false;
+    ss.saveSettings();
     if (usingRustPush) {
       await pushService.reset(false);
     }
@@ -1500,7 +1508,7 @@ class RustPushService extends GetxService {
   }
 
   Future<String> uploadCode(bool allowSharing, api.DartDeviceInfo deviceInfo) async {
-    var data = getQrInfo(allowSharing, deviceInfo.encodedData);
+    var data = getQrInfo(allowSharing, deviceInfo.encodedData!);
     if (allowSharing) {
       return base64Encode(data);
     }

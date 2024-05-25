@@ -20,33 +20,47 @@ Future<ArcPushState> serviceFromPtr({required String ptr, dynamic hint}) =>
     RustLib.instance.api.serviceFromPtr(ptr: ptr, hint: hint);
 
 Future<DartSupportAlert?> registerIds(
-        {required ArcPushState state, dynamic hint}) =>
-    RustLib.instance.api.registerIds(state: state, hint: hint);
+        {required ArcPushState state,
+        required List<IdsUser> users,
+        dynamic hint}) =>
+    RustLib.instance.api.registerIds(state: state, users: users, hint: hint);
 
 Future<void> configureAppReview({required ArcPushState state, dynamic hint}) =>
     RustLib.instance.api.configureAppReview(state: state, hint: hint);
 
 Future<void> configureMacos(
         {required ArcPushState state,
-        required MacOsConfig config,
+        required JoinedOsConfig config,
         dynamic hint}) =>
     RustLib.instance.api
         .configureMacos(state: state, config: config, hint: hint);
 
-Future<MacOsConfig> configFromValidationData(
+Future<JoinedOsConfig> configFromValidationData(
         {required List<int> data, required DartHwExtra extra, dynamic hint}) =>
     RustLib.instance.api
         .configFromValidationData(data: data, extra: extra, hint: hint);
+
+Future<JoinedOsConfig> configFromRelay(
+        {required String code,
+        required String host,
+        String? token,
+        dynamic hint}) =>
+    RustLib.instance.api
+        .configFromRelay(code: code, host: host, token: token, hint: hint);
 
 Future<DartDeviceInfo> getDeviceInfoState(
         {required ArcPushState state, dynamic hint}) =>
     RustLib.instance.api.getDeviceInfoState(state: state, hint: hint);
 
+Future<JoinedOsConfig?> getConfigState(
+        {required ArcPushState state, dynamic hint}) =>
+    RustLib.instance.api.getConfigState(state: state, hint: hint);
+
 Future<DartDeviceInfo> getDeviceInfo(
-        {required MacOsConfig config, dynamic hint}) =>
+        {required JoinedOsConfig config, dynamic hint}) =>
     RustLib.instance.api.getDeviceInfo(config: config, hint: hint);
 
-Future<MacOsConfig> configFromEncoded(
+Future<JoinedOsConfig> configFromEncoded(
         {required List<int> encoded, dynamic hint}) =>
     RustLib.instance.api.configFromEncoded(encoded: encoded, hint: hint);
 
@@ -123,13 +137,30 @@ Stream<TransferProgress> uploadAttachment(
     RustLib.instance.api.uploadAttachment(
         state: state, path: path, mime: mime, uti: uti, name: name, hint: hint);
 
-Future<DartLoginState> tryAuth(
+Future<Uint8List> getToken({required ArcPushState state, dynamic hint}) =>
+    RustLib.instance.api.getToken(state: state, hint: hint);
+
+Future<String> saveUser({required IdsUser user, dynamic hint}) =>
+    RustLib.instance.api.saveUser(user: user, hint: hint);
+
+Future<IdsUser> restoreUser({required String user, dynamic hint}) =>
+    RustLib.instance.api.restoreUser(user: user, hint: hint);
+
+Future<(DartLoginState, IdsUser?)> tryAuth(
         {required ArcPushState state,
         required String username,
         required String password,
         dynamic hint}) =>
     RustLib.instance.api.tryAuth(
         state: state, username: username, password: password, hint: hint);
+
+Future<IdsUser> authPhone(
+        {required ArcPushState state,
+        required String number,
+        required List<int> sig,
+        dynamic hint}) =>
+    RustLib.instance.api
+        .authPhone(state: state, number: number, sig: sig, hint: hint);
 
 Future<DartLoginState> send2FaToDevices(
         {required ArcPushState state, dynamic hint}) =>
@@ -204,22 +235,40 @@ class ArcPushState extends RustOpaque {
   );
 }
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<MacOSConfig>>
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IDSUser>>
 @sealed
-class MacOsConfig extends RustOpaque {
-  MacOsConfig.dcoDecode(List<dynamic> wire)
-      : super.dcoDecode(wire, _kStaticData);
+class IdsUser extends RustOpaque {
+  IdsUser.dcoDecode(List<dynamic> wire) : super.dcoDecode(wire, _kStaticData);
 
-  MacOsConfig.sseDecode(int ptr, int externalSizeOnNative)
+  IdsUser.sseDecode(int ptr, int externalSizeOnNative)
       : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_MacOsConfig,
+        RustLib.instance.api.rust_arc_increment_strong_count_IdsUser,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_MacOsConfig,
+        RustLib.instance.api.rust_arc_decrement_strong_count_IdsUser,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_MacOsConfigPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_IdsUserPtr,
+  );
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>>
+@sealed
+class JoinedOsConfig extends RustOpaque {
+  JoinedOsConfig.dcoDecode(List<dynamic> wire)
+      : super.dcoDecode(wire, _kStaticData);
+
+  JoinedOsConfig.sseDecode(int ptr, int externalSizeOnNative)
+      : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_JoinedOsConfig,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_JoinedOsConfig,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_JoinedOsConfigPtr,
   );
 }
 
@@ -392,13 +441,13 @@ class DartDeviceInfo {
   final String name;
   final String serial;
   final String osVersion;
-  final Uint8List encodedData;
+  final Uint8List? encodedData;
 
   const DartDeviceInfo({
     required this.name,
     required this.serial,
     required this.osVersion,
-    required this.encodedData,
+    this.encodedData,
   });
 
   @override
@@ -1064,7 +1113,6 @@ sealed class PollResult with _$PollResult {
 
 enum RegistrationPhase {
   wantsOsConfig,
-  wantsUserPass,
   wantsRegister,
   registered,
   ;

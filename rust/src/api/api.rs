@@ -1,6 +1,6 @@
 
 
-use std::{borrow::{Borrow, BorrowMut}, future::Future, io::{Cursor, Write}, path::PathBuf, str::FromStr, sync::{Arc, OnceLock}, time::Duration};
+use std::{borrow::{Borrow, BorrowMut}, future::Future, io::{Cursor, Write}, ops::Deref, path::PathBuf, str::FromStr, sync::{Arc, OnceLock}, time::Duration};
 
 use anyhow::anyhow;
 use flutter_rust_bridge::{frb, IntoDart, JoinHandle};
@@ -12,9 +12,9 @@ pub use rustpush::{IDSAppleUser, PushError, IDSUser, IMClient, IMessage, Convers
 
 use serde::{Serialize, Deserialize};
 use tokio::{runtime::Runtime, select, sync::{broadcast, oneshot::{self, Sender}, Mutex, RwLock}};
-use rustpush::{init_logger, APSConnection, APSState, Attachment, BalloonBody, MMCSFile, MessagePart, MessageParts, OSConfig, RegisterState};
-pub use rustpush::{MacOSConfig, HardwareConfig};
+use rustpush::{init_logger, APSConnection, APSState, Attachment, BalloonBody, HardwareConfig, IDSPhoneUser, MMCSFile, MacOSConfig, MessagePart, MessageParts, OSConfig, RegisterState, RelayConfig};
 use uniffi::{deps::log::{info, error}, HandleAlloc};
+use uuid::Uuid;
 use std::io::Seek;
 use async_recursion::async_recursion;
 
@@ -46,25 +46,50 @@ lazy_static! {
     };
 }
 
+#[frb(opaque)]
+#[derive(Serialize, Deserialize, Clone)]
+pub enum JoinedOSConfig {
+    MacOS(Arc<MacOSConfig>),
+    Relay(Arc<RelayConfig>),
+}
+
+impl JoinedOSConfig {
+    fn config(&self) -> Arc<dyn OSConfig> {
+        match self {
+            Self::MacOS(conf) => conf.clone(),
+            Self::Relay(conf) => conf.clone(),
+        }
+    }
+}
+
+impl Deref for JoinedOSConfig {
+    type Target = dyn OSConfig;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::MacOS(conf) => conf.as_ref(),
+            Self::Relay(conf) => conf.as_ref(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 struct SavedHardwareState {
     push: APSState,
-    os_config: MacOSConfig,
+    os_config: JoinedOSConfig,
 }
 
 pub enum RegistrationPhase {
     WantsOSConfig,
-    WantsUserPass,
     WantsRegister,
     Registered,
 }
 
 pub struct InnerPushState {
     pub conn: Option<Arc<APSConnection>>,
-    pub users: Vec<IDSUser>,
     pub client: Option<IMClient>,
     pub conf_dir: PathBuf,
-    pub os_config: Option<Arc<MacOSConfig>>,
+    pub os_config: Option<JoinedOSConfig>,
     pub account: Option<AppleAccount>,
     pub cancel_poll: Mutex<Option<Sender<()>>>
 }
@@ -77,7 +102,6 @@ pub async fn new_push_state(dir: String) -> anyhow::Result<Arc<PushState>> {
     // flutter_rust_bridge::setup_default_user_utils();
     let state = PushState(RwLock::new(InnerPushState {
         conn: None,
-        users: vec![],
         client: None,
         conf_dir: PathBuf::from_str(&dir).unwrap(),
         os_config: None,
@@ -137,8 +161,8 @@ async fn restore(curr_state: &PushState) -> anyhow::Result<()> {
     let Ok(state) = plist::from_file::<_, SavedHardwareState>(&hw_config_path) else { return Ok(()) };
 
     // even if we failed on the initial connection, we don't care cuz we're restoring.
-    inner.os_config = Some(Arc::new(state.os_config.clone()));
-    let (connection, _err) = setup_push(inner.os_config.clone().unwrap(), Some(&state.push), hw_config_path).await;
+    inner.os_config = Some(state.os_config);
+    let (connection, _err) = setup_push(inner.os_config.as_ref().unwrap(), Some(&state.push), hw_config_path).await;
     inner.conn = Some(connection);
 
     // id may not exist yet; that's fine
@@ -147,7 +171,7 @@ async fn restore(curr_state: &PushState) -> anyhow::Result<()> {
     println!("registration expires at {}", users[0].identity.as_ref().unwrap().get_exp().unwrap());
 
     inner.client = Some(IMClient::new(inner.conn.as_ref().unwrap().clone(), users, 
-        inner.conf_dir.join("id_cache.plist"), inner.os_config.clone().unwrap(), Box::new(move |updated_keys| {
+        inner.conf_dir.join("id_cache.plist"), inner.os_config.as_ref().unwrap().config(), Box::new(move |updated_keys| {
             println!("updated keys!!!");
             std::fs::write(&id_path, plist_to_string(&updated_keys).unwrap()).unwrap();
         })).await);
@@ -167,16 +191,15 @@ pub struct DartSupportAlert {
     pub action: Option<DartSupportAction>,
 }
 
-pub async fn register_ids(state: &Arc<PushState>) -> anyhow::Result<Option<DartSupportAlert>> {
+pub async fn register_ids(state: &Arc<PushState>, users: &Vec<IDSUser>) -> anyhow::Result<Option<DartSupportAlert>> {
+    let mut users = users.clone(); // don't take ownership in case of failure
     if !matches!(state.get_phase().await, RegistrationPhase::WantsRegister) {
         panic!("Wrong phase! (register_ids)")
     }
     let mut inner = state.0.write().await;
     let conn_state = inner.conn.as_ref().unwrap().clone();
 
-    let mut empty_users = vec![];
-    std::mem::swap(&mut empty_users, &mut inner.users);
-    if let Err(err) = register(inner.os_config.as_ref().unwrap().as_ref(), &mut empty_users, &conn_state).await {
+    if let Err(err) = register(inner.os_config.as_deref().unwrap(), &mut users, &conn_state).await {
         return if let PushError::CustomerMessage(support) = err {
             Ok(Some(unsafe { std::mem::transmute(support) }))
         } else {
@@ -184,22 +207,22 @@ pub async fn register_ids(state: &Arc<PushState>) -> anyhow::Result<Option<DartS
         }
     }
     let id_path = inner.conf_dir.join("id.plist");
-    std::fs::write(&id_path, plist_to_string(&empty_users).unwrap()).unwrap();
+    std::fs::write(&id_path, plist_to_string(&users).unwrap()).unwrap();
 
-    inner.client = Some(IMClient::new(conn_state, empty_users, inner.conf_dir.join("id_cache.plist"), inner.os_config.clone().unwrap(), Box::new(move |updated_keys| {
+    inner.client = Some(IMClient::new(conn_state, users, inner.conf_dir.join("id_cache.plist"), inner.os_config.as_ref().unwrap().config(), Box::new(move |updated_keys| {
         std::fs::write(&id_path, plist_to_string(&updated_keys).unwrap()).unwrap();
     })).await);
 
     Ok(None)
 }
 
-async fn setup_push(config: Arc<MacOSConfig>, state: Option<&APSState>, state_path: PathBuf) -> (Arc<APSConnection>, Option<PushError>) {
-    let (conn, error) = APSConnection::new(config.clone(), state.cloned()).await;
+async fn setup_push(config: &JoinedOSConfig, state: Option<&APSState>, state_path: PathBuf) -> (Arc<APSConnection>, Option<PushError>) {
+    let (conn, error) = APSConnection::new(config.config(), state.cloned()).await;
 
     if error.is_none() {
         let state = SavedHardwareState {
             push: conn.state.read().await.clone(),
-            os_config: config.as_ref().clone()
+            os_config: config.clone()
         };
         std::fs::write(&state_path, plist_to_string(&state).unwrap()).unwrap();
     }
@@ -215,7 +238,7 @@ async fn setup_push(config: Arc<MacOSConfig>, state: Option<&APSState>, state_pa
                     // update keys
                     let state = SavedHardwareState {
                         push: conn.state.read().await.clone(),
-                        os_config: config_ref.as_ref().clone()
+                        os_config: config_ref.clone()
                     };
                     std::fs::write(&state_path, plist_to_string(&state).unwrap()).unwrap();
                 },
@@ -237,12 +260,12 @@ pub async fn configure_app_review(state: &Arc<PushState>) -> anyhow::Result<()> 
     Ok(())
 }
 
-pub async fn configure_macos(state: &Arc<PushState>, config: &MacOSConfig) -> anyhow::Result<()> {
+pub async fn configure_macos(state: &Arc<PushState>, config: &JoinedOSConfig) -> anyhow::Result<()> {
     let config = config.clone();
     let mut inner = state.0.write().await;
-    inner.os_config = Some(Arc::new(config));
+    inner.os_config = Some(config.clone());
     let conf_path = inner.conf_dir.join("hw_info.plist");
-    let (connection, err) = setup_push(inner.os_config.clone().unwrap(), None, conf_path).await;
+    let (connection, err) = setup_push(inner.os_config.as_ref().unwrap(), None, conf_path).await;
     if let Some(err) = err {
         return Err(err.into())
     }
@@ -258,23 +281,36 @@ pub struct DartHwExtra {
     pub aoskit_version: String,
 }
 
-pub fn config_from_validation_data(data: Vec<u8>, extra: DartHwExtra) -> anyhow::Result<MacOSConfig> {
+pub fn config_from_validation_data(data: Vec<u8>, extra: DartHwExtra) -> anyhow::Result<JoinedOSConfig> {
     let inner = HardwareConfig::from_validation_data(&data)?;
-    Ok(MacOSConfig {
+    Ok(JoinedOSConfig::MacOS(Arc::new(MacOSConfig {
         inner,
         version: extra.version,
         protocol_version: extra.protocol_version,
         device_id: extra.device_id,
         icloud_ua: extra.icloud_ua,
         aoskit_version: extra.aoskit_version,
-    })
+    })))
+}
+
+pub async fn config_from_relay(code: String, host: String, token: &Option<String>) -> anyhow::Result<JoinedOSConfig> {
+    Ok(JoinedOSConfig::Relay(Arc::new(RelayConfig {
+        version: RelayConfig::get_versions(&host, &code, token).await?,
+        icloud_ua: "com.apple.iCloudHelper/282 CFNetwork/1408.0.4 Darwin/22.5.0".to_string(),
+        aoskit_version: "com.apple.AOSKit/282 (com.apple.accountsd/113)".to_string(),
+        dev_uuid: Uuid::new_v4().to_string(),
+        protocol_version: 1660,
+        host: host.clone(),
+        code: code.clone(),
+        beeper_token: token.clone(),
+    })))
 }
 
 pub struct DartDeviceInfo {
     pub name: String,
     pub serial: String,
     pub os_version: String,
-    pub encoded_data: Vec<u8>,
+    pub encoded_data: Option<Vec<u8>>,
 }
 
 pub async fn get_device_info_state(state: &Arc<PushState>) -> anyhow::Result<DartDeviceInfo> {
@@ -282,42 +318,53 @@ pub async fn get_device_info_state(state: &Arc<PushState>) -> anyhow::Result<Dar
     get_device_info(locked.os_config.as_ref().unwrap())
 }
 
-pub fn get_device_info(config: &MacOSConfig) -> anyhow::Result<DartDeviceInfo> {
-    let copied = config.clone();
+pub async fn get_config_state(state: &Arc<PushState>) -> Option<JoinedOSConfig> {
+    let locked = state.0.read().await;
+    locked.os_config.clone()
+}
+
+pub fn get_device_info(config: &JoinedOSConfig) -> anyhow::Result<DartDeviceInfo> {
+    let debug_info = config.get_debug_meta();
     Ok(DartDeviceInfo {
-        name: config.inner.product_name.clone(),
-        serial: config.inner.platform_serial_number.clone(),
-        os_version: config.version.clone(),
-        encoded_data: crate::bbhwinfo::HwInfo {
-            inner: Some(crate::bbhwinfo::hw_info::InnerHwInfo {
-                product_name: copied.inner.product_name,
-                io_mac_address: copied.inner.io_mac_address.to_vec(),
-                platform_serial_number: copied.inner.platform_serial_number,
-                platform_uuid: copied.inner.platform_uuid,
-                root_disk_uuid: copied.inner.root_disk_uuid,
-                board_id: copied.inner.board_id,
-                os_build_num: copied.inner.os_build_num,
-                platform_serial_number_enc: copied.inner.platform_serial_number_enc,
-                platform_uuid_enc: copied.inner.platform_uuid_enc,
-                root_disk_uuid_enc: copied.inner.root_disk_uuid_enc,
-                rom: copied.inner.rom,
-                rom_enc: copied.inner.rom_enc,
-                mlb: copied.inner.mlb,
-                mlb_enc: copied.inner.mlb_enc
-            }),
-            version: copied.version,
-            protocol_version: copied.protocol_version as i32,
-            device_id: copied.device_id,
-            icloud_ua: copied.icloud_ua,
-            aoskit_version: copied.aoskit_version,
-        }.encode_to_vec()
+        name: debug_info.hardware_version.clone(),
+        serial: debug_info.serial_number.clone(),
+        os_version: debug_info.user_version.clone(),
+        encoded_data: match config {
+            JoinedOSConfig::MacOS(config) => {
+                let copied = config.as_ref().clone();
+                Some(crate::bbhwinfo::HwInfo {
+                    inner: Some(crate::bbhwinfo::hw_info::InnerHwInfo {
+                        product_name: copied.inner.product_name,
+                        io_mac_address: copied.inner.io_mac_address.to_vec(),
+                        platform_serial_number: copied.inner.platform_serial_number,
+                        platform_uuid: copied.inner.platform_uuid,
+                        root_disk_uuid: copied.inner.root_disk_uuid,
+                        board_id: copied.inner.board_id,
+                        os_build_num: copied.inner.os_build_num,
+                        platform_serial_number_enc: copied.inner.platform_serial_number_enc,
+                        platform_uuid_enc: copied.inner.platform_uuid_enc,
+                        root_disk_uuid_enc: copied.inner.root_disk_uuid_enc,
+                        rom: copied.inner.rom,
+                        rom_enc: copied.inner.rom_enc,
+                        mlb: copied.inner.mlb,
+                        mlb_enc: copied.inner.mlb_enc
+                    }),
+                    version: copied.version,
+                    protocol_version: copied.protocol_version as i32,
+                    device_id: copied.device_id,
+                    icloud_ua: copied.icloud_ua,
+                    aoskit_version: copied.aoskit_version,
+                }.encode_to_vec())
+            },
+            JoinedOSConfig::Relay(_) => None
+        }
     })
 }
 
-pub fn config_from_encoded(encoded: Vec<u8>) -> anyhow::Result<MacOSConfig> {
+pub fn config_from_encoded(encoded: Vec<u8>) -> anyhow::Result<JoinedOSConfig> {
     let copied = crate::bbhwinfo::HwInfo::decode(&mut Cursor::new(encoded))?;
     let inner = copied.inner.unwrap();
-    Ok(MacOSConfig {
+    Ok(JoinedOSConfig::MacOS(Arc::new(MacOSConfig {
         inner: HardwareConfig {
             product_name: inner.product_name,
             io_mac_address: inner.io_mac_address.try_into().unwrap(),
@@ -339,7 +386,7 @@ pub fn config_from_encoded(encoded: Vec<u8>) -> anyhow::Result<MacOSConfig> {
         device_id: copied.device_id,
         icloud_ua: copied.icloud_ua,
         aoskit_version: copied.aoskit_version,
-    })
+    })))
 }
 
 
@@ -825,7 +872,21 @@ pub async fn upload_attachment(sink: StreamSink<TransferProgress>, state: &Arc<P
     Ok(())
 }
 
-pub async fn try_auth(state: &Arc<PushState>, username: String, password: String) -> anyhow::Result<DartLoginState> {
+pub async fn get_token(state: &Arc<PushState>) -> Vec<u8> {
+    let connection = state.0.read().await.conn.as_ref().unwrap().clone();
+
+    connection.get_token().await.to_vec()
+}
+
+pub fn save_user(user: &IDSUser) -> anyhow::Result<String> {
+    Ok(plist_to_string(user)?)
+}
+
+pub fn restore_user(user: String) -> anyhow::Result<IDSUser> {
+    Ok(plist::from_reader(Cursor::new(user))?)
+}
+
+pub async fn try_auth(state: &Arc<PushState>, username: String, password: String) -> anyhow::Result<(DartLoginState, Option<IDSUser>)> {
     let connection = state.0.read().await.conn.as_ref().unwrap().clone();
 
     let mut inner = state.0.write().await;
@@ -834,9 +895,11 @@ pub async fn try_auth(state: &Arc<PushState>, username: String, password: String
     let mut apple_account = AppleAccount::new(anisette_config).await?;
     let mut login_state = apple_account.login_email_pass(&username, &password).await?;
 
+    let mut user = None;
     if let Some(pet) = apple_account.get_pet() {
-        let identity = IDSAppleUser::authenticate(&connection, username.trim(), &pet, inner.os_config.as_ref().unwrap().as_ref()).await?;
-        inner.users.push(identity);
+        let identity = IDSAppleUser::authenticate(&connection, username.trim(), &pet, inner.os_config.as_deref().unwrap()).await?;
+
+        user = Some(identity);
         
         // who needs extra steps when you have a PET, amirite?
         println!("confirmed login {:?}", login_state);
@@ -847,7 +910,15 @@ pub async fn try_auth(state: &Arc<PushState>, username: String, password: String
 
     inner.account = Some(apple_account);
     
-    Ok(unsafe { std::mem::transmute(login_state) })
+    Ok((unsafe { std::mem::transmute(login_state) }, user))
+}
+
+pub async fn auth_phone(state: &Arc<PushState>, number: String, sig: Vec<u8>) -> anyhow::Result<IDSUser> {
+    let inner = state.0.read().await;
+
+    let identity = IDSPhoneUser::authenticate(inner.conn.as_ref().unwrap(), &number, &sig, inner.os_config.as_deref().unwrap()).await?;
+
+    Ok(identity)
 }
 
 pub async fn send_2fa_to_devices(state: &Arc<PushState>) -> anyhow::Result<DartLoginState> {
@@ -904,9 +975,8 @@ pub async fn reset_state(state: &Arc<PushState>, reset_hw: bool) -> anyhow::Resu
     let conn_state = inner.conn.as_ref().unwrap().clone();
     inner.client = None;
     // try deregistering from iMessage, but if it fails we don't really care
-    let _ = register(inner.os_config.as_ref().unwrap().as_ref(), &mut [], &conn_state).await;
+    let _ = register(inner.os_config.as_deref().unwrap(), &mut [], &conn_state).await;
     inner.account = None;
-    inner.users = vec![];
     let _ = std::fs::remove_file(inner.conf_dir.join("id.plist"));
     let _ = std::fs::remove_file(inner.conf_dir.join("id_cache.plist"));
 
@@ -930,9 +1000,6 @@ impl PushState {
         let inner = self.0.read().await;
         if inner.os_config.is_none() {
             return RegistrationPhase::WantsOSConfig
-        }
-        if inner.users.len() == 0 && inner.client.is_none() {
-            return RegistrationPhase::WantsUserPass
         }
         if inner.client.is_none() {
             return RegistrationPhase::WantsRegister
