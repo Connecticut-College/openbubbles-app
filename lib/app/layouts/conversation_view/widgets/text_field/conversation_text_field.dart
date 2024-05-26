@@ -563,27 +563,10 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              if (!kIsWeb && iOS && Platform.isAndroid)
-                GestureDetector(
-                  onLongPress: () {
-                    openFullCamera(type: 'video');
-                  },
-                  child: IconButton(
-                      padding: const EdgeInsets.only(left: 10),
-                      icon: Icon(
-                        CupertinoIcons.camera_fill,
-                        color: context.theme.colorScheme.outline,
-                        size: 28,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () {
-                        openFullCamera();
-                      }),
-                ),
               IconButton(
                 icon: Icon(
                   iOS
-                      ? CupertinoIcons.square_arrow_up_on_square_fill
+                      ? CupertinoIcons.add_circled_solid
                       : material
                           ? Icons.add_circle_outline
                           : Icons.add,
@@ -656,45 +639,6 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
                   }
                 },
               ),
-              if (!kIsWeb && !Platform.isAndroid)
-                IconButton(
-                    icon: Icon(Icons.gif, color: context.theme.colorScheme.outline, size: 28),
-                    onPressed: () async {
-                      if (kIsDesktop || kIsWeb) {
-                        controller.showingOverlays = true;
-                      }
-                      GiphyGif? gif = await GiphyGet.getGif(
-                        context: context,
-                        apiKey: kIsWeb ? GIPHY_API_KEY : dotenv.get('GIPHY_API_KEY'),
-                        tabColor: context.theme.primaryColor,
-                        showEmojis: false,
-                      );
-                      if (kIsDesktop || kIsWeb) {
-                        controller.showingOverlays = false;
-                      }
-                      if (gif?.images?.original != null) {
-                        final response = await http.downloadFromUrl(gif!.images!.original!.url);
-                        if (response.statusCode == 200) {
-                          try {
-                            final Uint8List data = response.data;
-                            controller.pickedAttachments.add(PlatformFile(
-                              path: null,
-                              name: "${gif.title ?? randomString(8)}.gif",
-                              size: data.length,
-                              bytes: data,
-                            ));
-                            return;
-                          } catch (_) {}
-                        }
-                      }
-                    }),
-              if (kIsDesktop && !Platform.isLinux)
-                IconButton(
-                  icon: Icon(iOS ? CupertinoIcons.location_solid : Icons.location_on_outlined, color: context.theme.colorScheme.outline, size: 28),
-                  onPressed: () async {
-                    await Share.location(chat);
-                  },
-                ),
               Expanded(
                 child: Stack(
                   alignment: Alignment.centerLeft,
