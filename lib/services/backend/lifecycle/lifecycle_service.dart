@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui' hide window;
 
@@ -11,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:universal_html/html.dart';
+import 'package:universal_io/io.dart';
 
 LifecycleService ls = Get.isRegistered<LifecycleService>() ? Get.find<LifecycleService>() : Get.put(LifecycleService());
 
@@ -22,6 +24,9 @@ class LifecycleService extends GetxService with WidgetsBindingObserver {
   bool get isAlive => kIsWeb ? !(window.document.hidden ?? false)
       : kIsDesktop ? windowFocused : (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed
         || IsolateNameServer.lookupPortByName('bg_isolate') != null);
+  
+  bool isDead = false;
+  Timer? closeTimer;
 
   @override
   void onInit() {
@@ -49,6 +54,13 @@ class LifecycleService extends GetxService with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       await storeStartup.future;
       open();
+    }
+    if (state == AppLifecycleState.detached && !(kIsDesktop || kIsWeb)) {
+      isDead = true;
+      if (!outq.isProcessing && !inq.isProcessing) {
+        Logger.info("Engine exit");
+        await mcs.invokeMethod("engine-done");
+      }
     }
   }
 

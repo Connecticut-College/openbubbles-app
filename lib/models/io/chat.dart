@@ -356,6 +356,9 @@ class Chat {
   int? get pinIndex => _pinIndex.value;
   set pinIndex(int? i) => _pinIndex.value = i;
 
+  @Transient()
+  RxDouble sendProgress = 0.0.obs;
+
   var handles = ToMany<Handle>();
   List<String> guidRefs = [];
 
