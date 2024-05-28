@@ -178,6 +178,7 @@ class MethodChannelService extends GetxService {
         }
         return true;
       case "ReplyChat":
+        await pushService.initFuture;
         await storeStartup.future;
         Logger.info("Received reply to message from Kotlin");
         final Map<String, dynamic>? data = arguments;
