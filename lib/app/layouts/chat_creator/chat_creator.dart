@@ -12,6 +12,7 @@ import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/main.dart';
 import 'package:bluebubbles/models/models.dart';
 import 'package:bluebubbles/services/network/backend_service.dart';
+import 'package:bluebubbles/services/rustpush/rustpush_service.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/string_utils.dart';
 import 'package:dio/dio.dart';
@@ -710,6 +711,12 @@ class ChatCreatorState extends OptimizedState<ChatCreator> {
                             }
                           }
                           if (chat != null && existsOnServer) {
+                            if (backend is RustPushBackend) {
+                              var b = backend as RustPushBackend;
+                              var handle = await b.getDefaultHandle();
+                              chat.usingHandle = handle;
+                              chat.save(updateUsingHandle: true);
+                            }
                             ns.pushAndRemoveUntil(
                               Get.context!,
                               ConversationView(chat: chat, fromChatCreator: true),
