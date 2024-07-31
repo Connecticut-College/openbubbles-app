@@ -69,7 +69,7 @@ class BaseLogger extends GetxService {
     saveLogs.value = false;
 
     // Write the log to a file so the user can view/share it
-    await writeLogToFile();
+    await writeLogToFile(utf8.encode(logs.join('\n')));
 
     // Clear the logs
     logs.clear();
@@ -87,11 +87,10 @@ class BaseLogger extends GetxService {
     }
   }
 
-  Future<void> writeLogToFile() async {
+  Future<void> writeLogToFile(Uint8List logs) async {
     // Create the log file and write to it
     if (kIsWeb) {
-      final bytes = utf8.encode(logs.join('\n'));
-      final content = base64.encode(bytes);
+      final content = base64.encode(logs);
       html.AnchorElement(href: "data:application/octet-stream;charset=utf-16le;base64,$content")
         ..setAttribute("download", basename(logPath))
         ..click();
@@ -106,7 +105,7 @@ class BaseLogger extends GetxService {
     }
     File file = File(filePath);
     file.createSync(recursive: true);
-    file.writeAsStringSync(logs.join('\n'));
+    file.writeAsBytesSync(logs);
 
     // Show the snackbar when finished
     showSnackbar(

@@ -6,6 +6,7 @@ import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/app/layouts/settings/widgets/settings_widgets.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/utils/share.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -174,6 +175,29 @@ class _TroubleshootPanelState extends OptimizedState<TroubleshootPanel> {
                       title: "Open App Data Location",
                       subtitle: fs.appDocDir.path,
                       onTap: () async => await launchUrl(Uri.file(fs.appDocDir.path)),
+                    ),
+                  SettingsTile(
+                      leading: const SettingsLeadingIcon(
+                        iosIcon: CupertinoIcons.share,
+                        materialIcon: Icons.share,
+                      ),
+                      title: "Export OB logs",
+                      subtitle: "Last 2 hours saved",
+                      onTap: () async {
+                        var file = Directory("${fs.appDocDir.path}/../files/logs");
+                        final List<FileSystemEntity> entities = await file.list().toList();
+                        var current = entities.indexWhere((element) => element.path.endsWith("CURRENT.log"));
+                        var item = entities.removeAt(current);
+                        var end = await File(item.path).readAsBytes();
+                        var b = BytesBuilder();
+                        if (entities.isNotEmpty) {
+                          var next = await File(entities.first.path).readAsBytes();
+                          b.add(next);
+                        }
+                        b.add(end);
+                        var total = b.toBytes();
+                        Logger.writeLogToFile(total);
+                      },
                     ),
                 ]
               ),
