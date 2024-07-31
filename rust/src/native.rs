@@ -1,6 +1,7 @@
 use std::{fmt::Debug, sync::{Arc, RwLock}};
 
 use flexi_logger::{FileSpec, Logger, WriteMode};
+use rustpush::get_gateways_for_mccmnc;
 use tokio::runtime::{Handle, Runtime};
 use uniffi::deps::log::info;
 
@@ -10,6 +11,11 @@ use crate::{api::api::{get_phase, new_push_state, recv_wait, PollResult, PushSta
 pub trait MsgReceiver: Send + Sync + Debug {
     fn receieved_msg(&self, msg: u64);
     fn native_ready(&self, is_ready: bool, state: Arc<NativePushState>);
+}
+
+#[uniffi::export(with_foreign)]
+pub trait CarrierHandler: Send + Sync + Debug {
+    fn got_gateway(&self, gateway: Option<String>, error: Option<String>);
 }
 
 #[derive(uniffi::Object)] 
@@ -22,12 +28,23 @@ pub fn init_native(dir: String, handler: Arc<dyn MsgReceiver>) {
     info!("rpljslf start");
     runtime().spawn(async move {
         info!("rpljslf initting");
+        // TODO retry if this *unwrap* fails
         let state = Arc::new(NativePushState {
             state: new_push_state(dir).await
         });
         info!("rpljslf raed");
         handler.native_ready(state.get_ready().await, state.clone());
         info!("rpljslf dom");
+    });
+}
+
+#[uniffi::export]
+pub fn get_carrier(handler: Arc<dyn CarrierHandler>, mccmnc: String) {
+    runtime().spawn(async move {
+        match get_gateways_for_mccmnc(&mccmnc).await {
+            Ok(gateway) => handler.got_gateway(Some(gateway), None),
+            Err(err) => handler.got_gateway(None, Some(err.to_string())),
+        }
     });
 }
 

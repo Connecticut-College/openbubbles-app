@@ -9,10 +9,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_phase`, `get_raw`, `get_raw`, `get_raw`, `plist_to_bin`, `plist_to_buf`, `plist_to_string`, `restore`, `setup_push`, `to_imsg`, `wrap_sink`
+// These functions are ignored because they are not marked as `pub`: `config`, `get_phase`, `get_raw`, `get_raw`, `get_raw`, `plist_to_bin`, `plist_to_buf`, `plist_to_string`, `restore`, `setup_push`, `to_imsg`, `wrap_sink`
 // These functions are ignored because they have generic arguments: `bin_deserialize`, `bin_serialize`
 // These types are ignored because they are not used by any `pub` functions: `FLUTTER_RUST_BRIDGE_HANDLER`, `InnerPushState`, `SavedHardwareState`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `deref`, `eq`, `fmt`, `from`, `from`, `from`, `initialize`, `into`, `into`, `spawn`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `deref`, `deref`, `eq`, `fmt`, `from`, `from`, `from`, `initialize`, `into`, `into`, `spawn`
 
 Future<ArcPushState> newPushState({required String dir}) =>
     RustLib.instance.api.crateApiApiNewPushState(dir: dir);
@@ -20,29 +20,38 @@ Future<ArcPushState> newPushState({required String dir}) =>
 Future<ArcPushState> serviceFromPtr({required String ptr}) =>
     RustLib.instance.api.crateApiApiServiceFromPtr(ptr: ptr);
 
-Future<DartSupportAlert?> registerIds({required ArcPushState state}) =>
-    RustLib.instance.api.crateApiApiRegisterIds(state: state);
+Future<DartSupportAlert?> registerIds(
+        {required ArcPushState state, required List<IdsUser> users}) =>
+    RustLib.instance.api.crateApiApiRegisterIds(state: state, users: users);
 
 Future<void> configureAppReview({required ArcPushState state}) =>
     RustLib.instance.api.crateApiApiConfigureAppReview(state: state);
 
 Future<void> configureMacos(
-        {required ArcPushState state, required MacOsConfig config}) =>
+        {required ArcPushState state, required JoinedOsConfig config}) =>
     RustLib.instance.api
         .crateApiApiConfigureMacos(state: state, config: config);
 
-Future<MacOsConfig> configFromValidationData(
+Future<JoinedOsConfig> configFromValidationData(
         {required List<int> data, required DartHwExtra extra}) =>
     RustLib.instance.api
         .crateApiApiConfigFromValidationData(data: data, extra: extra);
 
+Future<JoinedOsConfig> configFromRelay(
+        {required String code, required String host, String? token}) =>
+    RustLib.instance.api
+        .crateApiApiConfigFromRelay(code: code, host: host, token: token);
+
 Future<DartDeviceInfo> getDeviceInfoState({required ArcPushState state}) =>
     RustLib.instance.api.crateApiApiGetDeviceInfoState(state: state);
 
-Future<DartDeviceInfo> getDeviceInfo({required MacOsConfig config}) =>
+Future<JoinedOsConfig?> getConfigState({required ArcPushState state}) =>
+    RustLib.instance.api.crateApiApiGetConfigState(state: state);
+
+Future<DartDeviceInfo> getDeviceInfo({required JoinedOsConfig config}) =>
     RustLib.instance.api.crateApiApiGetDeviceInfo(config: config);
 
-Future<MacOsConfig> configFromEncoded({required List<int> encoded}) =>
+Future<JoinedOsConfig> configFromEncoded({required List<int> encoded}) =>
     RustLib.instance.api.crateApiApiConfigFromEncoded(encoded: encoded);
 
 Future<DartIMessage> ptrToDart({required String ptr}) =>
@@ -108,12 +117,28 @@ Stream<TransferProgress> uploadAttachment(
     RustLib.instance.api.crateApiApiUploadAttachment(
         state: state, path: path, mime: mime, uti: uti, name: name);
 
-Future<DartLoginState> tryAuth(
+Future<Uint8List> getToken({required ArcPushState state}) =>
+    RustLib.instance.api.crateApiApiGetToken(state: state);
+
+Future<String> saveUser({required IdsUser user}) =>
+    RustLib.instance.api.crateApiApiSaveUser(user: user);
+
+Future<IdsUser> restoreUser({required String user}) =>
+    RustLib.instance.api.crateApiApiRestoreUser(user: user);
+
+Future<(DartLoginState, IdsUser?)> tryAuth(
         {required ArcPushState state,
         required String username,
         required String password}) =>
     RustLib.instance.api.crateApiApiTryAuth(
         state: state, username: username, password: password);
+
+Future<IdsUser> authPhone(
+        {required ArcPushState state,
+        required String number,
+        required List<int> sig}) =>
+    RustLib.instance.api
+        .crateApiApiAuthPhone(state: state, number: number, sig: sig);
 
 Future<DartLoginState> send2FaToDevices({required ArcPushState state}) =>
     RustLib.instance.api.crateApiApiSend2FaToDevices(state: state);
@@ -162,6 +187,12 @@ Future<List<DartPrivateDeviceInfo>> getSmsTargets(
         required bool refresh}) =>
     RustLib.instance.api.crateApiApiGetSmsTargets(
         state: state, handle: handle, refresh: refresh);
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IDSUser>>
+abstract class IdsUser implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>>
+abstract class JoinedOsConfig implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VerifyBody>>
 abstract class VerifyBody implements RustOpaqueInterface {}
@@ -285,13 +316,13 @@ class DartDeviceInfo {
   final String name;
   final String serial;
   final String osVersion;
-  final Uint8List encodedData;
+  final Uint8List? encodedData;
 
   const DartDeviceInfo({
     required this.name,
     required this.serial,
     required this.osVersion,
-    required this.encodedData,
+    this.encodedData,
   });
 
   @override
@@ -966,7 +997,6 @@ sealed class PollResult with _$PollResult {
 
 enum RegistrationPhase {
   wantsOsConfig,
-  wantsUserPass,
   wantsRegister,
   registered,
   ;
