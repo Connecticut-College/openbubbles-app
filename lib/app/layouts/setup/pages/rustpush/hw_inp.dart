@@ -44,7 +44,7 @@ class HwInpState extends OptimizedState<HwInp> {
   bool loading = false;
 
   bool stagingMine = true;
-  lib.JoinedOsConfig? staging;
+  api.JoinedOsConfig? staging;
   api.DartDeviceInfo? stagingInfo;
   String deviceName = "";
 
@@ -98,7 +98,7 @@ class HwInpState extends OptimizedState<HwInp> {
     }
   }
 
-  void select(lib.JoinedOsConfig parsed, bool mine) async {
+  void select(api.JoinedOsConfig parsed, bool mine) async {
     var info = await api.getDeviceInfo(config: parsed);
     setState(() {
       if (staging == null) {
@@ -620,7 +620,7 @@ class HwInpState extends OptimizedState<HwInp> {
     );
   }
 
-  Future<void> connect(lib.JoinedOsConfig config) async {
+  Future<void> connect(api.JoinedOsConfig config) async {
     setState(() {
       loading = true;
     });

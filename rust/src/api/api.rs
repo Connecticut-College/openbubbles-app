@@ -13,7 +13,7 @@ pub use rustpush::{PushError, IDSUser, IMClient, ConversationData, register};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tokio::{runtime::Runtime, select, sync::{broadcast, oneshot::{self, Sender}, Mutex, RwLock}};
-use rustpush::{authenticate_apple, APSConnection, APSConnectionResource, APSState, Attachment, MMCSFile, MessageInst, MessagePart, MessageParts, OSConfig, ResourceState};
+use rustpush::{authenticate_apple, authenticate_phone, APSConnection, APSConnectionResource, APSState, Attachment, AuthPhone, MMCSFile, MessageInst, MessagePart, MessageParts, OSConfig, RelayConfig, ResourceState};
 pub use rustpush::{MacOSConfig, HardwareConfig};
 use uniffi::{deps::log::{info, error}, HandleAlloc};
 use uuid::Uuid;
@@ -50,6 +50,7 @@ lazy_static! {
 
 #[frb(opaque)]
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(tag = "type")]
 pub enum JoinedOSConfig {
     MacOS(Arc<MacOSConfig>),
     Relay(Arc<RelayConfig>),
@@ -89,7 +90,7 @@ pub enum RegistrationPhase {
 
 #[frb(ignore)]
 pub struct InnerPushState {
-    pub conn: Option<Arc<APSConnection>>,
+    pub conn: Option<APSConnection>,
     pub client: Option<IMClient>,
     pub conf_dir: PathBuf,
     pub os_config: Option<JoinedOSConfig>,
@@ -162,6 +163,15 @@ async fn restore(curr_state: &PushState) {
         std::fs::write(&id_path, plist_to_string(&data.as_dictionary().unwrap().get("users").unwrap()).unwrap()).unwrap();
         std::fs::remove_file(inner.conf_dir.join("config.plist")).unwrap();
         info!("migrated!");
+    }
+
+    if let Ok(mut value) = plist::from_file::<_, Dictionary>(&hw_config_path) {
+        let os_config = value["os_config"].as_dictionary_mut().unwrap();
+        if !os_config.contains_key("type") {
+            os_config.insert("type".to_string(), Value::String("MacOS".to_string()));
+        }
+        std::fs::write(&hw_config_path, plist_to_string(&value).unwrap()).unwrap();
+        info!("migrated two!");
     }
 
     // second migrate
@@ -242,7 +252,7 @@ pub async fn register_ids(state: &Arc<PushState>, users: &Vec<IDSUser>) -> anyho
     Ok(None)
 }
 
-async fn setup_push(config: &JoinedOSConfig, state: Option<&APSState>, state_path: PathBuf) -> (Arc<APSConnection>, Option<PushError>) {
+async fn setup_push(config: &JoinedOSConfig, state: Option<&APSState>, state_path: PathBuf) -> (APSConnection, Option<PushError>) {
     let (conn, error) = APSConnectionResource::new(config.config(), state.cloned()).await;
 
     if error.is_none() {
@@ -946,8 +956,6 @@ pub fn restore_user(user: String) -> anyhow::Result<IDSUser> {
 }
 
 pub async fn try_auth(state: &Arc<PushState>, username: String, password: String) -> anyhow::Result<(DartLoginState, Option<IDSUser>)> {
-    let connection = state.0.read().await.conn.as_ref().unwrap().clone();
-
     let mut inner = state.0.write().await;
     let anisette_config = AnisetteConfiguration::new()
         .set_configuration_path(inner.conf_dir.join("anisette_test"));
@@ -956,7 +964,7 @@ pub async fn try_auth(state: &Arc<PushState>, username: String, password: String
 
     let mut user = None;
     if let Some(pet) = apple_account.get_pet() {
-        let identity = authenticate_apple(username.trim(), &pet, inner.os_config.as_ref().unwrap().as_ref()).await?;
+        let identity = authenticate_apple(username.trim(), &pet, inner.os_config.as_deref().unwrap()).await?;
         user = Some(identity);
         
         // who needs extra steps when you have a PET, amirite?
@@ -974,7 +982,10 @@ pub async fn try_auth(state: &Arc<PushState>, username: String, password: String
 pub async fn auth_phone(state: &Arc<PushState>, number: String, sig: Vec<u8>) -> anyhow::Result<IDSUser> {
     let inner = state.0.read().await;
 
-    let identity = IDSPhoneUser::authenticate(inner.conn.as_ref().unwrap(), &number, &sig, inner.os_config.as_deref().unwrap()).await?;
+    let identity = authenticate_phone(&number, AuthPhone {
+        push_token: inner.conn.as_deref().unwrap().get_token().await.to_vec().into(),
+        sigs: vec![sig.into()]
+    }, inner.os_config.as_deref().unwrap()).await?;
 
     Ok(identity)
 }
@@ -1030,10 +1041,13 @@ pub async fn reset_state(state: &Arc<PushState>, reset_hw: bool) -> anyhow::Resu
     }
     drop(inner);
     let mut inner = state.0.write().await;
+    info!("a");
     let conn_state = inner.conn.as_ref().unwrap().clone();
+    info!("b {:?}", inner.os_config.is_some());
     inner.client = None;
     // try deregistering from iMessage, but if it fails we don't really care
     let _ = register(inner.os_config.as_deref().unwrap(), &*conn_state.state.read().await, &mut []).await;
+    info!("c");
     inner.account = None;
     let _ = std::fs::remove_file(inner.conf_dir.join("id.plist"));
     let _ = std::fs::remove_file(inner.conf_dir.join("id_cache.plist"));
