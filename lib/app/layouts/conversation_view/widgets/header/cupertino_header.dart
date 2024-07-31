@@ -23,16 +23,38 @@ class CupertinoHeader extends StatelessWidget implements PreferredSizeWidget {
 
   final ConversationViewController controller;
 
+  // simulate apple's saturatioon
+  static const List<double> darkMatrix = <double>[
+    1.385, -0.56, -0.112, 0.0, 0.3, //
+    -0.315, 1.14, -0.112, 0.0, 0.3, //
+    -0.315, -0.56, 1.588, 0.0, 0.3, //
+    0.0, 0.0, 0.0, 1.0, 0.0
+  ];
+
+  static const List<double> lightMatrix = <double>[
+    1.74, -0.4, -0.17, 0.0, 0.0, //
+    -0.26, 1.6, -0.17, 0.0, 0.0, //
+    -0.26, -0.4, 1.83, 0.0, 0.0, //
+    0.0, 0.0, 0.0, 1.0, 0.0
+  ];
+
   @override
   Widget build(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ImageFilter.compose(
+          outer: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          inner: ColorFilter.matrix(
+            CupertinoTheme.maybeBrightnessOf(context) == Brightness.dark
+                ? darkMatrix
+                : lightMatrix,
+          )
+        ),
         child: Stack(
           children: [
             Container(
               decoration: BoxDecoration(
-                color: context.theme.colorScheme.properSurface.withOpacity(0.3),
+                color: context.theme.colorScheme.properSurface.withOpacity(0.7),
                 border: Border(
                   bottom: BorderSide(color: context.theme.colorScheme.properSurface, width: 1),
                 ),
