@@ -21,6 +21,7 @@ abstract class BackendService {
   HttpService? getRemoteService();
   bool canLeaveChat();
   bool canEditUnsend();
+  bool canSendSubject();
   Future<Message?> unsend(Message msg, MessagePart part);
   Future<Message?> edit(Message msgGuid, String text, int part);
   Future<PlatformFile> downloadAttachment(Attachment attachment,

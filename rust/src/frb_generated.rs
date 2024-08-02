@@ -2925,12 +2925,14 @@ impl SseDecode for crate::api::api::DartNormalMessage {
         let mut var_replyGuid = <Option<String>>::sse_decode(deserializer);
         let mut var_replyPart = <Option<String>>::sse_decode(deserializer);
         let mut var_service = <crate::api::api::DartMessageType>::sse_decode(deserializer);
+        let mut var_subject = <Option<String>>::sse_decode(deserializer);
         return crate::api::api::DartNormalMessage {
             parts: var_parts,
             effect: var_effect,
             reply_guid: var_replyGuid,
             reply_part: var_replyPart,
             service: var_service,
+            subject: var_subject,
         };
     }
 }
@@ -4199,6 +4201,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::api::DartNormalMessage {
             self.reply_guid.into_into_dart().into_dart(),
             self.reply_part.into_into_dart().into_dart(),
             self.service.into_into_dart().into_dart(),
+            self.subject.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5068,6 +5071,7 @@ impl SseEncode for crate::api::api::DartNormalMessage {
         <Option<String>>::sse_encode(self.reply_guid, serializer);
         <Option<String>>::sse_encode(self.reply_part, serializer);
         <crate::api::api::DartMessageType>::sse_encode(self.service, serializer);
+        <Option<String>>::sse_encode(self.subject, serializer);
     }
 }
 

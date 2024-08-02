@@ -2128,14 +2128,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   DartNormalMessage dco_decode_dart_normal_message(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return DartNormalMessage(
       parts: dco_decode_dart_message_parts(arr[0]),
       effect: dco_decode_opt_String(arr[1]),
       replyGuid: dco_decode_opt_String(arr[2]),
       replyPart: dco_decode_opt_String(arr[3]),
       service: dco_decode_dart_message_type(arr[4]),
+      subject: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -3292,12 +3293,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_replyGuid = sse_decode_opt_String(deserializer);
     var var_replyPart = sse_decode_opt_String(deserializer);
     var var_service = sse_decode_dart_message_type(deserializer);
+    var var_subject = sse_decode_opt_String(deserializer);
     return DartNormalMessage(
         parts: var_parts,
         effect: var_effect,
         replyGuid: var_replyGuid,
         replyPart: var_replyPart,
-        service: var_service);
+        service: var_service,
+        subject: var_subject);
   }
 
   @protected
@@ -4518,6 +4521,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.replyGuid, serializer);
     sse_encode_opt_String(self.replyPart, serializer);
     sse_encode_dart_message_type(self.service, serializer);
+    sse_encode_opt_String(self.subject, serializer);
   }
 
   @protected

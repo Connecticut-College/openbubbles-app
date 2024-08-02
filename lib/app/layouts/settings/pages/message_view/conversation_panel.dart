@@ -726,6 +726,30 @@ class _ConversationPanelState extends OptimizedState<ConversationPanel> {
                             ],
                           ),
                         ),
+                        AnimatedSizeAndFade.showHide(
+                          show: backend.canSendSubject(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                color: tileColor,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 15.0),
+                                  child: SettingsDivider(color: context.theme.colorScheme.surfaceVariant),
+                                ),
+                              ),
+                              SettingsSwitch(
+                                onChanged: (bool val) {
+                                  ss.settings.privateSubjectLine.value = val;
+                                  saveSettings();
+                                },
+                                initialVal: ss.settings.privateSubjectLine.value,
+                                title: "Send Subject Lines",
+                                backgroundColor: tileColor,
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     )
                   ]),

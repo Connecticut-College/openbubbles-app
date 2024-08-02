@@ -657,6 +657,7 @@ class DartNormalMessage {
   String? replyGuid;
   String? replyPart;
   final DartMessageType service;
+  String? subject;
 
   DartNormalMessage({
     required this.parts,
@@ -664,6 +665,7 @@ class DartNormalMessage {
     this.replyGuid,
     this.replyPart,
     required this.service,
+    this.subject,
   });
 
   @override
@@ -672,7 +674,8 @@ class DartNormalMessage {
       effect.hashCode ^
       replyGuid.hashCode ^
       replyPart.hashCode ^
-      service.hashCode;
+      service.hashCode ^
+      subject.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -683,7 +686,8 @@ class DartNormalMessage {
           effect == other.effect &&
           replyGuid == other.replyGuid &&
           replyPart == other.replyPart &&
-          service == other.service;
+          service == other.service &&
+          subject == other.subject;
 }
 
 @freezed

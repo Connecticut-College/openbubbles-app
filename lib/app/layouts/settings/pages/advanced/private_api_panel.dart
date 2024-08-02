@@ -351,30 +351,6 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                             ),
                           ),
                           AnimatedSizeAndFade.showHide(
-                            show: controller.serverVersionCode.value >= 63,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  color: tileColor,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 15.0),
-                                    child: SettingsDivider(color: context.theme.colorScheme.surfaceVariant),
-                                  ),
-                                ),
-                                SettingsSwitch(
-                                  onChanged: (bool val) {
-                                    ss.settings.privateSubjectLine.value = val;
-                                    saveSettings();
-                                  },
-                                  initialVal: ss.settings.privateSubjectLine.value,
-                                  title: "Send Subject Lines",
-                                  backgroundColor: tileColor,
-                                ),
-                              ],
-                            ),
-                          ),
-                          AnimatedSizeAndFade.showHide(
                             show: controller.serverVersionCode.value >= 84,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
