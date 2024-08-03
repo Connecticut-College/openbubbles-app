@@ -1,10 +1,12 @@
 use std::{fmt::Debug, sync::{Arc, RwLock}};
 
 use flexi_logger::{FileSpec, Logger, WriteMode};
+use log::error;
 use rustpush::get_gateways_for_mccmnc;
 use tokio::runtime::{Handle, Runtime};
 use uniffi::deps::log::info;
 
+use futures::FutureExt;
 use crate::{api::api::{get_phase, new_push_state, recv_wait, PollResult, PushState, RegistrationPhase}, frb_generated::FLUTTER_RUST_BRIDGE_HANDLER, init_logger, runtime};
 
 #[uniffi::export(with_foreign)]
@@ -54,14 +56,21 @@ impl NativePushState {
     pub fn start_loop(self: Arc<NativePushState>, handler: Arc<dyn MsgReceiver>) {
         runtime().spawn(async move {
             loop {
-                match recv_wait(&self.state).await {
-                    PollResult::Cont(Some(msg)) => {
-                        let result = Box::into_raw(Box::new(msg)) as u64;
-                        info!("emitting pointer {result}");
-                        handler.receieved_msg(result);
+                match std::panic::AssertUnwindSafe(recv_wait(&self.state)).catch_unwind().await {
+                    Ok(yes) => {
+                        match yes {
+                            PollResult::Cont(Some(msg)) => {
+                                let result = Box::into_raw(Box::new(msg)) as u64;
+                                info!("emitting pointer {result}");
+                                handler.receieved_msg(result);
+                            },
+                            PollResult::Cont(None) => continue,
+                            PollResult::Stop => break
+                        }
                     },
-                    PollResult::Cont(None) => continue,
-                    PollResult::Stop => break
+                    Err(e) => {
+                        error!("Failed {:?}", e.downcast_ref::<&str>());
+                    }
                 }
             }
             info!("finishing loop");
