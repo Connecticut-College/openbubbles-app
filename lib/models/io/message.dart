@@ -275,6 +275,7 @@ class Message {
   bool didNotifyRecipient;
   bool isBookmarked;
 
+  String? amkSessionId; // for sessioned messages
   bool hasBeenForwarded; // local SMS forwarding, used to keep track of this message needs to be sent
   String? stagingGuid;
 
@@ -407,6 +408,7 @@ class Message {
     this.isBookmarked = false,
     this.hasBeenForwarded = false,
     this.stagingGuid,
+    this.amkSessionId,
   }) {
       if (handle != null && handleId == null) handleId = handle!.originalROWID;
       if (error != null) _error.value = error;
@@ -500,7 +502,8 @@ class Message {
       didNotifyRecipient: json['didNotifyRecipient'] ?? false,
       isBookmarked: json['isBookmarked'] ?? false,
       hasBeenForwarded: json['hasBeenForwarded'] ?? false,
-      stagingGuid: json['stagingGuid']
+      stagingGuid: json['stagingGuid'],
+      amkSessionId: json['amkSessionId'],
     );
   }
 
@@ -643,6 +646,7 @@ class Message {
     existing.didNotifyRecipient = newMessage.didNotifyRecipient ? newMessage.didNotifyRecipient : existing.didNotifyRecipient;
     existing._error.value = newMessage._error.value;
     existing.stagingGuid = newMessage.stagingGuid;
+    existing.amkSessionId = newMessage.amkSessionId;
 
     try {
       messageBox.put(existing, mode: PutMode.update);
@@ -1150,6 +1154,7 @@ class Message {
 
     existing.hasBeenForwarded = newMessage.hasBeenForwarded;
     newMessage.stagingGuid = existing.stagingGuid;
+    newMessage.amkSessionId = existing.amkSessionId;
 
     return existing;
   }
@@ -1193,6 +1198,7 @@ class Message {
       "isBookmarked": isBookmarked,
       "hasBeenForwarded": hasBeenForwarded,
       "stagingGuid": stagingGuid,
+      "amkSessionId": amkSessionId,
     };
     if (includeObjects) {
       map['attachments'] = (attachments).map((e) => e!.toMap()).toList();

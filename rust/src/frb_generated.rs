@@ -2393,9 +2393,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VerifyBody>
 );
 
@@ -2439,16 +2436,6 @@ impl SseDecode for JoinedOSConfig {
     }
 }
 
-impl SseDecode for Value {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
 impl SseDecode for VerifyBody {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2480,14 +2467,6 @@ impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>>
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
@@ -2583,6 +2562,56 @@ impl SseDecode for crate::api::api::DartAttachmentType {
     }
 }
 
+impl SseDecode for crate::api::api::DartBalloon {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_url = <String>::sse_decode(deserializer);
+        let mut var_session = <Option<String>>::sse_decode(deserializer);
+        let mut var_layout = <crate::api::api::DartBalloonLayout>::sse_decode(deserializer);
+        let mut var_ldText = <Option<String>>::sse_decode(deserializer);
+        let mut var_isLive = <bool>::sse_decode(deserializer);
+        let mut var_icon = <Vec<u8>>::sse_decode(deserializer);
+        return crate::api::api::DartBalloon {
+            url: var_url,
+            session: var_session,
+            layout: var_layout,
+            ld_text: var_ldText,
+            is_live: var_isLive,
+            icon: var_icon,
+        };
+    }
+}
+
+impl SseDecode for crate::api::api::DartBalloonLayout {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_imageSubtitle = <String>::sse_decode(deserializer);
+                let mut var_imageTitle = <String>::sse_decode(deserializer);
+                let mut var_caption = <String>::sse_decode(deserializer);
+                let mut var_secondarySubcaption = <String>::sse_decode(deserializer);
+                let mut var_tertiarySubcaption = <String>::sse_decode(deserializer);
+                let mut var_subcaption = <String>::sse_decode(deserializer);
+                let mut var_class_ = <crate::api::api::NSDictionaryClass>::sse_decode(deserializer);
+                return crate::api::api::DartBalloonLayout::TemplateLayout {
+                    image_subtitle: var_imageSubtitle,
+                    image_title: var_imageTitle,
+                    caption: var_caption,
+                    secondary_subcaption: var_secondarySubcaption,
+                    tertiary_subcaption: var_tertiarySubcaption,
+                    subcaption: var_subcaption,
+                    class: var_class_,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::api::api::DartChangeParticipantMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2637,6 +2666,22 @@ impl SseDecode for crate::api::api::DartEditMessage {
             tuuid: var_tuuid,
             edit_part: var_editPart,
             new_parts: var_newParts,
+        };
+    }
+}
+
+impl SseDecode for crate::api::api::DartExtensionApp {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_appId = <u64>::sse_decode(deserializer);
+        let mut var_bundleId = <String>::sse_decode(deserializer);
+        let mut var_balloon = <Option<crate::api::api::DartBalloon>>::sse_decode(deserializer);
+        return crate::api::api::DartExtensionApp {
+            name: var_name,
+            app_id: var_appId,
+            bundle_id: var_bundleId,
+            balloon: var_balloon,
         };
     }
 }
@@ -2838,6 +2883,10 @@ impl SseDecode for crate::api::api::DartMessagePart {
                 let mut var_field1 = <String>::sse_decode(deserializer);
                 return crate::api::api::DartMessagePart::Mention(var_field0, var_field1);
             }
+            3 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::api::DartMessagePart::Object(var_field0);
+            }
             _ => {
                 unimplemented!("");
             }
@@ -2926,6 +2975,7 @@ impl SseDecode for crate::api::api::DartNormalMessage {
         let mut var_replyPart = <Option<String>>::sse_decode(deserializer);
         let mut var_service = <crate::api::api::DartMessageType>::sse_decode(deserializer);
         let mut var_subject = <Option<String>>::sse_decode(deserializer);
+        let mut var_app = <Option<crate::api::api::DartExtensionApp>>::sse_decode(deserializer);
         return crate::api::api::DartNormalMessage {
             parts: var_parts,
             effect: var_effect,
@@ -2933,6 +2983,7 @@ impl SseDecode for crate::api::api::DartNormalMessage {
             reply_part: var_replyPart,
             service: var_service,
             subject: var_subject,
+            app: var_app,
         };
     }
 }
@@ -3003,7 +3054,7 @@ impl SseDecode for crate::api::api::DartReactMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_toUuid = <String>::sse_decode(deserializer);
-        let mut var_toPart = <u64>::sse_decode(deserializer);
+        let mut var_toPart = <Option<u64>>::sse_decode(deserializer);
         let mut var_reaction = <crate::api::api::DartReactMessageType>::sse_decode(deserializer);
         let mut var_toText = <String>::sse_decode(deserializer);
         return crate::api::api::DartReactMessage {
@@ -3029,7 +3080,7 @@ impl SseDecode for crate::api::api::DartReactMessageType {
                 };
             }
             1 => {
-                let mut var_spec = <Value>::sse_decode(deserializer);
+                let mut var_spec = <crate::api::api::DartExtensionApp>::sse_decode(deserializer);
                 let mut var_body = <crate::api::api::DartMessageParts>::sse_decode(deserializer);
                 return crate::api::api::DartReactMessageType::Extension {
                     spec: var_spec,
@@ -3295,6 +3346,18 @@ impl SseDecode for crate::api::api::MyAsyncRuntime {
     }
 }
 
+impl SseDecode for crate::api::api::NSDictionaryClass {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::api::NSDictionaryClass::NSDictionary,
+            1 => crate::api::api::NSDictionaryClass::NSMutableDictionary,
+            _ => unreachable!("Invalid variant for NSDictionaryClass: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for Option<usize> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3361,11 +3424,35 @@ impl SseDecode for Option<crate::api::api::DartAttachment> {
     }
 }
 
+impl SseDecode for Option<crate::api::api::DartBalloon> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::api::DartBalloon>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::api::api::DartConversationData> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<crate::api::api::DartConversationData>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::api::DartExtensionApp> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::api::DartExtensionApp>::sse_decode(
                 deserializer,
             ));
         } else {
@@ -3717,21 +3804,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<JoinedOSConfig>> for JoinedOSC
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Value> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Value> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Value>> for Value {
-    fn into_into_dart(self) -> FrbWrapper<Value> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<VerifyBody> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
@@ -3795,6 +3867,68 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::api::DartAttachmentType>
     for crate::api::api::DartAttachmentType
 {
     fn into_into_dart(self) -> crate::api::api::DartAttachmentType {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::api::DartBalloon {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.url.into_into_dart().into_dart(),
+            self.session.into_into_dart().into_dart(),
+            self.layout.into_into_dart().into_dart(),
+            self.ld_text.into_into_dart().into_dart(),
+            self.is_live.into_into_dart().into_dart(),
+            self.icon.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::api::DartBalloon {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::api::DartBalloon>
+    for crate::api::api::DartBalloon
+{
+    fn into_into_dart(self) -> crate::api::api::DartBalloon {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::api::DartBalloonLayout {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::api::api::DartBalloonLayout::TemplateLayout {
+                image_subtitle,
+                image_title,
+                caption,
+                secondary_subcaption,
+                tertiary_subcaption,
+                subcaption,
+                class,
+            } => [
+                0.into_dart(),
+                image_subtitle.into_into_dart().into_dart(),
+                image_title.into_into_dart().into_dart(),
+                caption.into_into_dart().into_dart(),
+                secondary_subcaption.into_into_dart().into_dart(),
+                tertiary_subcaption.into_into_dart().into_dart(),
+                subcaption.into_into_dart().into_dart(),
+                class.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::api::DartBalloonLayout
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::api::DartBalloonLayout>
+    for crate::api::api::DartBalloonLayout
+{
+    fn into_into_dart(self) -> crate::api::api::DartBalloonLayout {
         self
     }
 }
@@ -3884,6 +4018,29 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::api::DartEditMessage>
     for crate::api::api::DartEditMessage
 {
     fn into_into_dart(self) -> crate::api::api::DartEditMessage {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::api::DartExtensionApp {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.name.into_into_dart().into_dart(),
+            self.app_id.into_into_dart().into_dart(),
+            self.bundle_id.into_into_dart().into_dart(),
+            self.balloon.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::api::DartExtensionApp
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::api::DartExtensionApp>
+    for crate::api::api::DartExtensionApp
+{
+    fn into_into_dart(self) -> crate::api::api::DartExtensionApp {
         self
     }
 }
@@ -4077,6 +4234,9 @@ impl flutter_rust_bridge::IntoDart for crate::api::api::DartMessagePart {
                 field1.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::api::api::DartMessagePart::Object(field0) => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
             _ => {
                 unimplemented!("");
             }
@@ -4202,6 +4362,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::api::DartNormalMessage {
             self.reply_part.into_into_dart().into_dart(),
             self.service.into_into_dart().into_dart(),
             self.subject.into_into_dart().into_dart(),
+            self.app.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4566,6 +4727,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::api::MyAsyncRuntime>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::api::NSDictionaryClass {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::NSDictionary => 0.into_dart(),
+            Self::NSMutableDictionary => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::api::NSDictionaryClass
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::api::NSDictionaryClass>
+    for crate::api::api::NSDictionaryClass
+{
+    fn into_into_dart(self) -> crate::api::api::NSDictionaryClass {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::api::PollResult {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -4660,16 +4842,6 @@ impl SseEncode for JoinedOSConfig {
     }
 }
 
-impl SseEncode for Value {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>>>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
-    }
-}
-
 impl SseEncode for VerifyBody {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4700,15 +4872,6 @@ impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>>
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4794,6 +4957,47 @@ impl SseEncode for crate::api::api::DartAttachmentType {
     }
 }
 
+impl SseEncode for crate::api::api::DartBalloon {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.url, serializer);
+        <Option<String>>::sse_encode(self.session, serializer);
+        <crate::api::api::DartBalloonLayout>::sse_encode(self.layout, serializer);
+        <Option<String>>::sse_encode(self.ld_text, serializer);
+        <bool>::sse_encode(self.is_live, serializer);
+        <Vec<u8>>::sse_encode(self.icon, serializer);
+    }
+}
+
+impl SseEncode for crate::api::api::DartBalloonLayout {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::api::api::DartBalloonLayout::TemplateLayout {
+                image_subtitle,
+                image_title,
+                caption,
+                secondary_subcaption,
+                tertiary_subcaption,
+                subcaption,
+                class,
+            } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(image_subtitle, serializer);
+                <String>::sse_encode(image_title, serializer);
+                <String>::sse_encode(caption, serializer);
+                <String>::sse_encode(secondary_subcaption, serializer);
+                <String>::sse_encode(tertiary_subcaption, serializer);
+                <String>::sse_encode(subcaption, serializer);
+                <crate::api::api::NSDictionaryClass>::sse_encode(class, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::api::api::DartChangeParticipantMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4828,6 +5032,16 @@ impl SseEncode for crate::api::api::DartEditMessage {
         <String>::sse_encode(self.tuuid, serializer);
         <u64>::sse_encode(self.edit_part, serializer);
         <crate::api::api::DartMessageParts>::sse_encode(self.new_parts, serializer);
+    }
+}
+
+impl SseEncode for crate::api::api::DartExtensionApp {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.name, serializer);
+        <u64>::sse_encode(self.app_id, serializer);
+        <String>::sse_encode(self.bundle_id, serializer);
+        <Option<crate::api::api::DartBalloon>>::sse_encode(self.balloon, serializer);
     }
 }
 
@@ -4995,6 +5209,10 @@ impl SseEncode for crate::api::api::DartMessagePart {
                 <String>::sse_encode(field0, serializer);
                 <String>::sse_encode(field1, serializer);
             }
+            crate::api::api::DartMessagePart::Object(field0) => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
             _ => {
                 unimplemented!("");
             }
@@ -5072,6 +5290,7 @@ impl SseEncode for crate::api::api::DartNormalMessage {
         <Option<String>>::sse_encode(self.reply_part, serializer);
         <crate::api::api::DartMessageType>::sse_encode(self.service, serializer);
         <Option<String>>::sse_encode(self.subject, serializer);
+        <Option<crate::api::api::DartExtensionApp>>::sse_encode(self.app, serializer);
     }
 }
 
@@ -5132,7 +5351,7 @@ impl SseEncode for crate::api::api::DartReactMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.to_uuid, serializer);
-        <u64>::sse_encode(self.to_part, serializer);
+        <Option<u64>>::sse_encode(self.to_part, serializer);
         <crate::api::api::DartReactMessageType>::sse_encode(self.reaction, serializer);
         <String>::sse_encode(self.to_text, serializer);
     }
@@ -5149,7 +5368,7 @@ impl SseEncode for crate::api::api::DartReactMessageType {
             }
             crate::api::api::DartReactMessageType::Extension { spec, body } => {
                 <i32>::sse_encode(1, serializer);
-                <Value>::sse_encode(spec, serializer);
+                <crate::api::api::DartExtensionApp>::sse_encode(spec, serializer);
                 <crate::api::api::DartMessageParts>::sse_encode(body, serializer);
             }
             _ => {
@@ -5356,6 +5575,22 @@ impl SseEncode for crate::api::api::MyAsyncRuntime {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::api::api::NSDictionaryClass {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::api::NSDictionaryClass::NSDictionary => 0,
+                crate::api::api::NSDictionaryClass::NSMutableDictionary => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for Option<usize> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5416,12 +5651,32 @@ impl SseEncode for Option<crate::api::api::DartAttachment> {
     }
 }
 
+impl SseEncode for Option<crate::api::api::DartBalloon> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::api::DartBalloon>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::api::api::DartConversationData> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::api::api::DartConversationData>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::api::DartExtensionApp> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::api::DartExtensionApp>::sse_encode(value, serializer);
         }
     }
 }
@@ -5680,20 +5935,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn frbgen_bluebubbles_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerValue(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_bluebubbles_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerValue(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>>::decrement_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
     pub extern "C" fn frbgen_bluebubbles_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVerifyBody(
         ptr: *const std::ffi::c_void,
     ) {
@@ -5709,99 +5950,3 @@ mod io {
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
-
-/// cbindgen:ignore
-#[cfg(target_family = "wasm")]
-mod web {
-    // This file is automatically generated, so please do not edit it.
-    // Generated by `flutter_rust_bridge`@ 2.1.0.
-
-    // Section: imports
-
-    use super::*;
-    use crate::api::api::*;
-    use crate::*;
-    use flutter_rust_bridge::for_generated::byteorder::{
-        NativeEndian, ReadBytesExt, WriteBytesExt,
-    };
-    use flutter_rust_bridge::for_generated::wasm_bindgen;
-    use flutter_rust_bridge::for_generated::wasm_bindgen::prelude::*;
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
-    use flutter_rust_bridge::{Handler, IntoIntoDart};
-
-    // Section: boilerplate
-
-    flutter_rust_bridge::frb_generated_boilerplate_web!();
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcPushState(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < PushState >>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcPushState(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < PushState >>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIDSUser(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IDSUser>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIDSUser(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IDSUser>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJoinedOSConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJoinedOSConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinedOSConfig>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerValue(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerValue(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Value>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVerifyBody(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VerifyBody>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVerifyBody(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VerifyBody>>::decrement_strong_count(ptr as _);
-    }
-}
-#[cfg(target_family = "wasm")]
-pub use web::*;

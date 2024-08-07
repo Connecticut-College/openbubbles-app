@@ -153,6 +153,8 @@ Future<Null> initApp(bool bubble, List<String> arguments) async {
   await mcs.init();
   backend.init();
 
+  es.refreshCache();
+
   /* ----- RANDOM STUFF INITIALIZATION ----- */
   HttpOverrides.global = BadCertOverride();
   dynamic exception;

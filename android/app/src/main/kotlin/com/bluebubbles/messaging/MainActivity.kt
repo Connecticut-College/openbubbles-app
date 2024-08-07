@@ -6,6 +6,8 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import com.bluebubbles.messaging.services.backend_ui_interop.MethodCallHandler
+import com.bluebubbles.messaging.services.extension.KeyboardViewFactory
+import com.bluebubbles.messaging.services.extension.LiveExtensionFactory
 import com.bluebubbles.messaging.services.rustpush.APNService
 import io.flutter.embedding.android.FlutterFragment
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -40,6 +42,8 @@ class MainActivity : FlutterFragmentActivity() {
             }
             MethodCallHandler().methodCallHandler(call, result, this)
         }
+        flutterEngine.platformViewsController.registry.registerViewFactory("extension-keyboard", KeyboardViewFactory())
+        flutterEngine.platformViewsController.registry.registerViewFactory("extension-live", LiveExtensionFactory())
     }
 
     override fun createFlutterFragment(): FlutterFragment {

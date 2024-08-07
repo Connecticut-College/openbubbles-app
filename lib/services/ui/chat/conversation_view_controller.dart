@@ -61,6 +61,7 @@ class ConversationViewController extends StatefulController with GetSingleTicker
   bool showAttachmentPicker = false;
   final GlobalKey textFieldKey = GlobalKey();
   final RxList<PlatformFile> pickedAttachments = <PlatformFile>[].obs;
+  final Rx<(PlatformFile?, PayloadData)?> pickedApp = Rx<(PlatformFile, PayloadData)?>(null);
   final textController = MentionTextEditingController();
   final subjectTextController = SpellCheckTextEditingController();
   final RxBool showRecording = false.obs;
@@ -87,7 +88,7 @@ class ConversationViewController extends StatefulController with GetSingleTicker
   bool keyboardOpen = false;
   double _keyboardOffset = 0;
   Timer? _scrollDownDebounce;
-  Future<void> Function(Tuple6<List<PlatformFile>, String, String, String?, int?, String?>, bool)? sendFunc;
+  Future<void> Function(Tuple7<List<PlatformFile>, String, String, String?, int?, String?, PayloadData?>, bool)? sendFunc;
   bool isProcessingImage = false;
 
   @override
@@ -165,8 +166,8 @@ class ConversationViewController extends StatefulController with GetSingleTicker
     }
   }
 
-  Future<void> send(List<PlatformFile> attachments, String text, String subject, String? replyGuid, int? replyPart, String? effectId, bool isAudioMessage) async {
-    sendFunc?.call(Tuple6(attachments, text, subject, replyGuid, replyPart, effectId), isAudioMessage);
+  Future<void> send(List<PlatformFile> attachments, String text, String subject, String? replyGuid, int? replyPart, String? effectId, PayloadData? payload, bool isAudioMessage) async {
+    sendFunc?.call(Tuple7(attachments, text, subject, replyGuid, replyPart, effectId, payload), isAudioMessage);
   }
 
   void queueImage(Tuple4<Attachment, PlatformFile, BuildContext, Completer<Uint8List>> item) {

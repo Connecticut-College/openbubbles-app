@@ -68,6 +68,24 @@ class MethodChannelService extends GetxService {
         await pushService.recievedMsgPointer(pointer);
         print("finish message $pointer");
         return true;
+      case "extension-add-message":
+        try {
+          es.addMessage(arguments!);
+          return true;
+        } catch (e, s) {
+          Logger.error(e);
+          Logger.error(s);
+          return Future.error(PlatformException(code: "500", message: e.toString()), s);
+        }
+      case "extension-update-message":
+        try {
+          await es.updateMessage(arguments!);
+          return true;
+        } catch (e, s) {
+          Logger.error(e);
+          Logger.error(s);
+          return Future.error(PlatformException(code: "500", message: e.toString()), s);
+        }
       case "NewServerUrl":
         if (arguments == null) return false;
         await storeStartup.future;

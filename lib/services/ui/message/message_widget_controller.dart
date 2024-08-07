@@ -83,6 +83,9 @@ class MessageWidgetController extends StatefulController with GetSingleTickerPro
   }
 
   void buildMessageParts() {
+    if (message.guid?.startsWith("error") ?? false) {
+      print("hi");
+    }
     // go through the attributed body
     if (message.attributedBody.firstOrNull?.runs.isNotEmpty ?? false) {
       parts = attributedBodyToMessagePart(message.attributedBody.first);
@@ -117,7 +120,7 @@ class MessageWidgetController extends StatefulController with GetSingleTickerPro
       }
     }
     if (parts.isEmpty) {
-      if (!message.hasApplePayloadData && !message.isLegacyUrlPreview && !message.isInteractive && !message.isGroupEvent) {
+      if (!message.hasApplePayloadData && !message.isLegacyUrlPreview && !message.isGroupEvent) {
         parts.addAll(message.attachments.mapIndexed((index, e) => MessagePart(
           attachments: [e!],
           part: index,

@@ -260,6 +260,60 @@ sealed class DartAttachmentType with _$DartAttachmentType {
   ) = DartAttachmentType_MMCS;
 }
 
+class DartBalloon {
+  final String url;
+  final String? session;
+  final DartBalloonLayout layout;
+  final String? ldText;
+  final bool isLive;
+  final Uint8List icon;
+
+  const DartBalloon({
+    required this.url,
+    this.session,
+    required this.layout,
+    this.ldText,
+    required this.isLive,
+    required this.icon,
+  });
+
+  @override
+  int get hashCode =>
+      url.hashCode ^
+      session.hashCode ^
+      layout.hashCode ^
+      ldText.hashCode ^
+      isLive.hashCode ^
+      icon.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DartBalloon &&
+          runtimeType == other.runtimeType &&
+          url == other.url &&
+          session == other.session &&
+          layout == other.layout &&
+          ldText == other.ldText &&
+          isLive == other.isLive &&
+          icon == other.icon;
+}
+
+@freezed
+sealed class DartBalloonLayout with _$DartBalloonLayout {
+  const DartBalloonLayout._();
+
+  const factory DartBalloonLayout.templateLayout({
+    required String imageSubtitle,
+    required String imageTitle,
+    required String caption,
+    required String secondarySubcaption,
+    required String tertiarySubcaption,
+    required String subcaption,
+    required NSDictionaryClass class_,
+  }) = DartBalloonLayout_TemplateLayout;
+}
+
 class DartChangeParticipantMessage {
   final List<String> newParticipants;
   final int groupVersion;
@@ -365,6 +419,34 @@ class DartEditMessage {
           tuuid == other.tuuid &&
           editPart == other.editPart &&
           newParts == other.newParts;
+}
+
+class DartExtensionApp {
+  final String name;
+  final int appId;
+  final String bundleId;
+  final DartBalloon? balloon;
+
+  const DartExtensionApp({
+    required this.name,
+    required this.appId,
+    required this.bundleId,
+    this.balloon,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^ appId.hashCode ^ bundleId.hashCode ^ balloon.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DartExtensionApp &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          appId == other.appId &&
+          bundleId == other.bundleId &&
+          balloon == other.balloon;
 }
 
 class DartHwExtra {
@@ -567,6 +649,9 @@ sealed class DartMessagePart with _$DartMessagePart {
     String field0,
     String field1,
   ) = DartMessagePart_Mention;
+  const factory DartMessagePart.object(
+    String field0,
+  ) = DartMessagePart_Object;
 }
 
 class DartMessageParts {
@@ -658,6 +743,7 @@ class DartNormalMessage {
   String? replyPart;
   final DartMessageType service;
   String? subject;
+  DartExtensionApp? app;
 
   DartNormalMessage({
     required this.parts,
@@ -666,6 +752,7 @@ class DartNormalMessage {
     this.replyPart,
     required this.service,
     this.subject,
+    this.app,
   });
 
   @override
@@ -675,7 +762,8 @@ class DartNormalMessage {
       replyGuid.hashCode ^
       replyPart.hashCode ^
       service.hashCode ^
-      subject.hashCode;
+      subject.hashCode ^
+      app.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -687,7 +775,8 @@ class DartNormalMessage {
           replyGuid == other.replyGuid &&
           replyPart == other.replyPart &&
           service == other.service &&
-          subject == other.subject;
+          subject == other.subject &&
+          app == other.app;
 }
 
 @freezed
@@ -752,13 +841,13 @@ class DartPrivateDeviceInfo {
 
 class DartReactMessage {
   final String toUuid;
-  final int toPart;
+  final int? toPart;
   final DartReactMessageType reaction;
   final String toText;
 
   const DartReactMessage({
     required this.toUuid,
-    required this.toPart,
+    this.toPart,
     required this.reaction,
     required this.toText,
   });
@@ -787,7 +876,7 @@ sealed class DartReactMessageType with _$DartReactMessageType {
     required bool enable,
   }) = DartReactMessageType_React;
   const factory DartReactMessageType.extension_({
-    required Value spec,
+    required DartExtensionApp spec,
     required DartMessageParts body,
   }) = DartReactMessageType_Extension;
 }
@@ -987,6 +1076,12 @@ class MyAsyncRuntime {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is MyAsyncRuntime && runtimeType == other.runtimeType;
+}
+
+enum NSDictionaryClass {
+  nsDictionary,
+  nsMutableDictionary,
+  ;
 }
 
 @freezed

@@ -745,6 +745,7 @@ class ChatCreatorState extends OptimizedState<ChatCreator> {
                               fakeController.value!.replyToMessage?.item1.threadOriginatorGuid ?? fakeController.value!.replyToMessage?.item1.guid,
                               fakeController.value!.replyToMessage?.item2,
                               effect,
+                              null,
                               false,
                             );
                             fakeController.value!.replyToMessage = null;

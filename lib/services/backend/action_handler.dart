@@ -80,7 +80,7 @@ class ActionHandler extends GetxService {
         }
         completer.complete();
       }).catchError((error, stack) async {
-        Logger.error('Failed to send message! Error: ${error.toString()}');
+        Logger.error('Failed to send message! Error: ${error.toString()} $stack');
 
         final tempGuid = m.guid;
         m = handleSendError(error, m);
@@ -100,8 +100,8 @@ class ActionHandler extends GetxService {
           Logger.info("Reaction match failed for ${newMessage.guid} - already handled?", tag: "MessageStatus");
         }
         completer.complete();
-      }).catchError((error) async {
-        Logger.error('Failed to send message! Error: ${error.toString()}');
+      }).catchError((error, stack) async {
+        Logger.error('Failed to send message! Error: ${error.toString()} $stack');
 
         final tempGuid = m.guid;
         m = handleSendError(error, m);
@@ -161,9 +161,9 @@ class ActionHandler extends GetxService {
       attachmentProgress.removeWhere((e) => e.item1 == m.guid || e.item2 >= 1);
 
       completer.complete();
-    }).catchError((error) async {
+    }).catchError((error, stack) async {
       latestCancelToken = null;
-      Logger.error('Failed to send message! Error: ${error.toString()}');
+      Logger.error('Failed to send message! Error: ${error.toString()} $stack');
 
       if (ss.settings.isSmsRouter.value && c.isTextForwarding && !apnsSuccess) {
         // forward to cell even if couldn't send to APNs

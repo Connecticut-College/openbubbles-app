@@ -125,7 +125,7 @@ class _FullscreenImageState extends OptimizedState<FullscreenImage> with Automat
                 onPressed: () async {
                   if (widget.file.path == null) return showSnackbar("Error", "Failed to find a path to share attachment!");
                   Share.file(
-                    "Shared ${widget.attachment.mimeType!.split("/")[0]} from BlueBubbles: ${widget.attachment.transferName}",
+                    "Shared ${widget.attachment.mimeType!.split("/")[0]} from OpenBubbles: ${widget.attachment.transferName}",
                     widget.file.path!,
                   );
                 },
@@ -186,7 +186,7 @@ class _FullscreenImageState extends OptimizedState<FullscreenImage> with Automat
               if (kIsWeb || kIsDesktop) return showMetadataDialog(widget.attachment, context);
               if (widget.file.path == null) return;
               Share.file(
-                "Shared ${widget.attachment.mimeType!.split("/")[0]} from BlueBubbles: ${widget.attachment.transferName}",
+                "Shared ${widget.attachment.mimeType!.split("/")[0]} from OpenBubbles: ${widget.attachment.transferName}",
                 widget.file.path!,
               );
             } else if (value == 2) {
