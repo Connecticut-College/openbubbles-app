@@ -225,17 +225,19 @@ Future<Null> initApp(bool bubble, List<String> arguments) async {
       // ignore: deprecated_member_use_from_same_package
       themeObjectBox = store.box<ThemeObject>();
 
-      if (!ss.settings.finishedSetup.value) {
-        attachmentBox.removeAll();
-        chatBox.removeAll();
-        contactBox.removeAll();
-        fcmDataBox.removeAll();
-        handleBox.removeAll();
-        messageBox.removeAll();
-        themeBox.removeAll();
-        themeEntryBox.removeAll();
-        themeObjectBox.removeAll();
-      }
+      // we reset when apple logs out; don't wipe chats
+      // this was supposed to ensure chats are deleted after reset.
+      // if (!ss.settings.finishedSetup.value) {
+      //   attachmentBox.removeAll();
+      //   chatBox.removeAll();
+      //   contactBox.removeAll();
+      //   fcmDataBox.removeAll();
+      //   handleBox.removeAll();
+      //   messageBox.removeAll();
+      //   themeBox.removeAll();
+      //   themeEntryBox.removeAll();
+      //   themeObjectBox.removeAll();
+      // }
 
       if (themeBox.isEmpty()) {
         await ss.prefs.setString("selected-dark", "OLED Dark");
