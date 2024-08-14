@@ -760,6 +760,12 @@ class _SettingsPageState extends OptimizedState<SettingsPage> {
                                             },
                                           ),
                                           TextButton(
+                                            child: Text("Just change hardware", style: context.theme.textTheme.bodyLarge!.copyWith(color: context.theme.colorScheme.primary)),
+                                            onPressed: () async {
+                                              (backend as RustPushBackend).markFailedToLogin();
+                                            },
+                                          ),
+                                          TextButton(
                                             child: Text("Everything except hardware", style: context.theme.textTheme.bodyLarge!.copyWith(color: context.theme.colorScheme.primary)),
                                             onPressed: () async {
                                               if (usingRustPush) {
