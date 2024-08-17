@@ -152,7 +152,7 @@ class _SettingsPageState extends OptimizedState<SettingsPage> {
                                 enabled: deviceInfo == null,
                                 child: SettingsTile(
                                   backgroundColor: tileColor,
-                                  title: ss.settings.redactedMode.value ? "Model Name" : deviceInfo == null ? null : RustPushBBUtils.modelToUser(deviceInfo!.name),
+                                  title: deviceInfo == null ? null : RustPushBBUtils.modelToUser(deviceInfo!.name),
                                   subtitle: ss.settings.redactedMode.value ? "Serial Number" : deviceInfo?.serial,
                                   onTap: () {
                                     ns.pushAndRemoveSettingsUntil(
