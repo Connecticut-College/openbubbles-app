@@ -1,5 +1,6 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:bluebubbles/app/components/avatars/contact_avatar_widget.dart';
+import 'package:bluebubbles/app/layouts/settings/pages/advanced/developer_mode_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/advanced/tasker_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/profile/profile_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/scheduling/message_reminders_panel.dart';
@@ -564,6 +565,24 @@ class _SettingsPageState extends OptimizedState<SettingsPage> {
                                 leading: const SettingsLeadingIcon(
                                   iosIcon: CupertinoIcons.bolt,
                                   materialIcon: Icons.electric_bolt_outlined,
+                                ),
+                              ),
+                            if (Platform.isAndroid)
+                              SettingsTile(
+                                backgroundColor: tileColor,
+                                title: "Developer Settings",
+                                subtitle: "Test and develop OpenBubbles extensions",
+                                trailing: nextIcon,
+                                onTap: () async {
+                                  ns.pushAndRemoveSettingsUntil(
+                                    context,
+                                    DeveloperModePanel(),
+                                        (route) => route.isFirst,
+                                  );
+                                },
+                                leading: const SettingsLeadingIcon(
+                                  iosIcon: CupertinoIcons.hammer,
+                                  materialIcon: Icons.developer_mode,
                                 ),
                               ),
                           ],

@@ -726,6 +726,27 @@ class _ConversationPanelState extends OptimizedState<ConversationPanel> {
                             ],
                           ),
                         ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              color: tileColor,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 15.0),
+                                child: SettingsDivider(color: context.theme.colorScheme.surfaceVariant),
+                              ),
+                            ),
+                            SettingsSwitch(
+                              title: "Automatically convert emoticons to emoji",
+                              initialVal: ss.settings.convertEmoticonsToEmoji.value,
+                              onChanged: (bool val) {
+                                ss.settings.convertEmoticonsToEmoji.value = val;
+                                saveSettings();
+                              },
+                              backgroundColor: tileColor,
+                            ),
+                          ],
+                        ),
                         AnimatedSizeAndFade.showHide(
                           show: backend.canSendSubject(),
                           child: Column(
