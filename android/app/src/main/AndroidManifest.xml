@@ -38,6 +38,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" /> <!-- Features -->
@@ -100,7 +101,11 @@
 
         <service
             android:name=".services.rustpush.APNService"
-            android:exported="false" />
+            android:foregroundServiceType="specialUse"
+            android:exported="false" >
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps a connection alive with Apple Push Services to receive end-to-end encrypted iMessages directly from Apple." />
+        </service>
         <service android:name="com.android.mms.transaction.TransactionService" />
 
         <receiver android:name=".services.intents.InternalIntentReceiver" />
